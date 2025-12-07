@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "finalproject-kolesnik-m25-555"
+version = "0.1.0"
+description = "Консольное приложение валютного кошелька"
+authors = ["Колесник Матвей Анатольевич"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "finalproject_Kolesnik_M25-555"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+prettytable = "^3.17.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.8"
+
+[tool.poetry.scripts]
+project = "finalproject_Kolesnik_M25-555.cli:main"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
