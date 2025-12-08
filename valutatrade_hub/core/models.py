@@ -4,17 +4,30 @@ import secrets
 
 
 class User:
-    def __init__(self, user_id: int, username: str, password: str,
-                 registration_date: datetime = None):
+    def __init__(
+            self,
+            user_id: int,
+            username: str,
+            password: str | None = None,
+            hashed_password: str | None = None,
+            salt: str | None = None,
+            registration_date: datetime | None = None):
+        if not username or not username.strip():
+            raise ValueError("Имя не может быть пустым")
+
         self._user_id = user_id
-        self._salt = secrets.token_urlsafe(8)
-        password_salt = (password + self._salt).encode()
-        self._hashed_password = hashlib.sha256(password_salt).hexdigest()
         self._username = username
-        if registration_date:
-            self._registration_date = registration_date
+
+        if hashed_password and salt:
+            self._hashed_password = hashed_password
+            self._salt = salt
         else:
-            self._registration_date = datetime.now()
+            if password is None or len(password) < 4:
+                raise ValueError("Пароль должен быть не короче 4 символов")
+            self._salt = secrets.token_urlsafe(8)
+            password_salt = (password + self._salt).encode()
+            self._hashed_password = hashlib.sha256(password_salt).hexdigest()
+        self._registration_date = registration_date or datetime.now()
 
     def verify_password(self, password: str) -> bool:
         hash = hashlib.sha256((password + self._salt).encode()).hexdigest()
@@ -31,6 +44,14 @@ class User:
     @property
     def registration_date(self) -> datetime:
         return self._registration_date
+
+    @property
+    def hashed_password(self) -> str:
+        return self._hashed_password
+
+    @property
+    def salt(self) -> str:
+        return self._salt
 
     @username.setter
     def username(self, value: str) -> None:
@@ -64,10 +85,10 @@ class Wallet:
 
     @balance.setter
     def balance(self, value: float) -> None:
-        if value < 0:
-            raise ValueError("Баланс не может быть отрицательным")
         if not isinstance(value, (int, float)):
             raise ValueError("Некорректный тип данных")
+        if value < 0:
+            raise ValueError("Баланс не может быть отрицательным")
         self._balance = float(value)
 
     def deposit(self, amount: float) -> None:
