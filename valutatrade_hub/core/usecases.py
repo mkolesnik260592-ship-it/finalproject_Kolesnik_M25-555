@@ -189,8 +189,8 @@ def sell(currency: str, amount: float) -> str:
     if code not in wallets_dict:
         return "Кошелек не существует"
     wallet = Wallet(code, wallets_dict[code].get("balance", 0.0))
-    if wallet.balance < revenue_usd:
-        return "Недостаточно средств"
+    if wallet.balance < amt:
+        return f"Недостаточно {code}: доступно {wallet.balance:.4f}, требуется {amt:.4f}"
 
     old_balance = wallet.balance
     wallet.withdraw(amt)
@@ -206,4 +206,56 @@ def sell(currency: str, amount: float) -> str:
 )
 
 def get_rate(cur_from: str, cur_to: str) -> str:
-    pass
+
+    from_curr = validate_currency_code(cur_from)
+    to_curr = validate_currency_code(cur_to)
+
+    if from_curr == to_curr:
+        return f"Курс {from_curr} -> {to_curr}: 1.0"
+
+    rates = load_rates()
+    key = f"{from_curr}_{to_curr}"
+
+    if key in rates:
+        rate_data = rates[key]
+        rate = rate_data["rate"]
+        updated = rate_data["updated_at"]
+
+        reverse_rate = 1.0 /rate if rate != 0 else 0
+
+        return (f"Курс {from_curr}→{to_curr}: {rate:.6f} "
+                f"(обновлено: {updated})\n"
+                f"Обратный курс {to_curr}→{from_curr}: {reverse_rate:.6f}")
+
+    key2 = f"{to_curr}_{from_curr}"
+    if key2 in rates:
+        rate_data = rates[key2]
+        reverse_rate = rate_data["rate"]
+        updated = rate_data["updated_at"]
+
+        rate = 1.0 /reverse_rate if reverse_rate != 0 else 0
+
+        return (f"Курс {from_curr}→{to_curr}: {rate:.6f} "
+                f"(обновлено: {updated})\n"
+                f"Обратный курс {from_curr}→{to_curr}: {reverse_rate:.6f}")
+
+    default_rates = {
+        "USD": 1.0,
+        "EUR": 1.0786,
+        "BTC": 59337.21,
+        "RUB": 0.01016,
+        "ETH": 3720.00,
+    }
+
+    from_to_usd = default_rates.get(from_curr)
+    to_to_usd = default_rates.get(to_curr)
+
+    if from_to_usd is not None and to_to_usd is not None:
+
+        rate = from_to_usd / to_to_usd
+        reverse_rate = to_to_usd / from_to_usd
+
+        return (f"Курс {from_curr}→{to_curr}: {rate:.6f} (расчетный)\n"
+                f"Обратный курс {to_curr}→{from_curr}: {reverse_rate:.6f}")
+
+    return f"Курс {from_curr}→{to_curr} недоступен"
