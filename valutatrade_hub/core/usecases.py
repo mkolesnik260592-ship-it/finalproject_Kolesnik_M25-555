@@ -237,7 +237,7 @@ def get_rate(cur_from: str, cur_to: str) -> str:
 
         return (f"Курс {from_curr}→{to_curr}: {rate:.6f} "
                 f"(обновлено: {updated})\n"
-                f"Обратный курс {from_curr}→{to_curr}: {reverse_rate:.6f}")
+                f"Обратный курс {to_curr}→{from_curr}: {reverse_rate:.6f}")
 
     default_rates = {
         "USD": 1.0,
@@ -259,3 +259,20 @@ def get_rate(cur_from: str, cur_to: str) -> str:
                 f"Обратный курс {to_curr}→{from_curr}: {reverse_rate:.6f}")
 
     return f"Курс {from_curr}→{to_curr} недоступен"
+
+def logout_user() -> str:
+    """Выйти из системы"""
+    global current_user
+    if current_user:
+        username = current_user.username
+        current_user = None
+        return f"Вы вышли из системы. До свидания, {username}!"
+    else:
+        return "Вы не вошли в систему"
+
+def get_current_user_info() -> str:
+    """Получить информацию о текущем пользователе"""
+    if current_user:
+        return f"Текущий пользователь: {current_user.username} (id={current_user.user_id})"
+    else:
+        return "Вы не вошли в систему"

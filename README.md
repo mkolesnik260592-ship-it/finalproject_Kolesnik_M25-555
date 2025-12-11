@@ -17,9 +17,9 @@
 ## Установка
 
 make install## Использование
-h
+
 make project## Разработка
-h
+
 make lint  # Проверка кода
 make build  # Сборка пакета## Технологии
 
@@ -27,3 +27,32 @@ make build  # Сборка пакета## Технологии
 - Poetry (управление зависимостями)
 - Ruff (линтинг)
 - PrettyTable (форматированный вывод)
+
+## Использование
+
+### Базовые команды:
+
+```bash
+# Регистрация нового пользователя
+poetry run project register --username <имя> --password <пароль>
+
+# Вход в систему
+poetry run project login --username <имя> --password <пароль>
+
+# Показать текущего пользователя
+poetry run project whoami
+
+# Показать портфель
+poetry run project show-portfolio [--base <валюта>]
+
+# Купить валюту
+poetry run project buy --currency <код> --amount <количество>
+
+# Продать валюту
+poetry run project sell --currency <код> --amount <количество>
+
+# Получить курс валют
+poetry run project get-rate --from <валюта> --to <валюта>
+
+# Выйти из системы
+poetry run project logout
