@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from pathlib import Path
 
@@ -52,3 +53,31 @@ def validate_amount(amount: float) -> float:
     if not isinstance(amount, (int, float)) or amount <= 0:
         raise ValueError("Сумма не может быть отрицательной")
     return float(amount)
+
+
+SESSION_PATH = Path("data/session.json")
+
+def load_session():
+    """Загрузить сессию из файла"""
+    if not SESSION_PATH.exists():
+        return None
+    data = load_json(SESSION_PATH, default=None)
+    return data
+
+def save_session(user_id: int, username: str):
+    """Сохранить сессию в файл"""
+    data = {
+        "user_id": user_id,
+        "username": username,
+        "timestamp": datetime.now().isoformat()
+    }
+    save_json(data, SESSION_PATH)
+
+def clear_session():
+    """Очистить сессию"""
+    if SESSION_PATH.exists():
+        SESSION_PATH.unlink()
+
+def find_user_by_id(users, user_id: int):
+    """Найти пользователя по ID"""
+    return next((u for u in users if u.get("user_id") == user_id), None)

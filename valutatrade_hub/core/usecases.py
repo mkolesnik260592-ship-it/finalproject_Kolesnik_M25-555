@@ -1,15 +1,28 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from valutatrade_hub.core.models import User, Wallet, Portfolio
 from valutatrade_hub.core.utils import (
     load_users, save_users,
     load_portfolios, save_portfolios,
-    load_rates, save_rates,
+    load_rates, save_rates, find_user_by_id,
     find_user, next_user_id,
-    validate_currency_code, validate_amount,
+    validate_currency_code, validate_amount, load_session,
+    save_session, clear_session
 )
 
 
+session = load_session()
 current_user: User | None = None
+
+if session and "user_id" in session:
+    users = load_users()
+    user_data = find_user_by_id(users, session["user_id"])
+    if user_data:
+        current_user = User(
+            user_data["user_id"], user_data["username"],
+            hashed_password=user_data["hashed_password"],
+            salt=user_data["salt"],
+            registration_date=datetime.fromisoformat(user_data["registration_date"]),
+        )
 
 def register(username: str, password: str) -> str:
         if not username or not username.strip():
@@ -32,7 +45,7 @@ def register(username: str, password: str) -> str:
         portfolios = load_portfolios()
         portfolios.append({
             "user_id": user_id,
-            "wallets": {}
+            "wallets": {"USD": {"balance": 1000.0}}
         })
         save_portfolios(portfolios)
         return f"Пользователь '{username}' зарегистрирован (id={user_id})."
@@ -53,6 +66,7 @@ def login(username: str, password: str) -> str:
         return "Неверный пароль"
     else:
         current_user = user
+        save_session(user.user_id, user.username)
         return f"Вы вошли как '{username}'"
 
 
@@ -125,8 +139,20 @@ def buy(currency: str, amount: float) -> str:
         portfolio_data = {"user_id": current_user.user_id, "wallets": {}}
         portfolios.append(portfolio_data)
 
-
     wallets_dict = portfolio_data.get("wallets", {})
+
+    if "USD" not in wallets_dict:
+        return "У вас нет USD кошелька для совершения покупки"
+
+    usd_wallet_data = wallets_dict["USD"]
+    usd_wallet = Wallet("USD", usd_wallet_data.get("balance", 0.0))
+
+    if usd_wallet.balance < cost_usd:
+        return f"Недостаточно USD: доступно {usd_wallet.balance:.2f} USD, требуется {cost_usd:.2f} USD"
+
+    old_usd_balance = usd_wallet.balance
+    usd_wallet.withdraw(cost_usd)
+    wallets_dict["USD"] = {"balance": usd_wallet.balance}
 
     if code not in wallets_dict:
         wallets_dict[code] = {"balance": 0.0}
@@ -141,8 +167,9 @@ def buy(currency: str, amount: float) -> str:
     return (
     f"Покупка выполнена: {amt:.4f} {code} по курсу {rate:.2f} USD/{code}\n"
     f"Изменения в портфеле:\n"
+    f"- USD: было {old_usd_balance:.2f} → стало {usd_wallet.balance:.2f}\n"
     f"- {code}: было {old_balance:.4f} → стало {wallet.balance:.4f}\n"
-    f"Оценочная стоимость покупки: {cost_usd:,.2f} USD"
+    f"Стоимость покупки: {cost_usd:,.2f} USD"
 )
 
 def sell(currency: str, amount: float) -> str:
@@ -186,15 +213,25 @@ def sell(currency: str, amount: float) -> str:
         return "Портфель не найден"
 
     wallets_dict = portfolio_data.get("wallets", {})
+
     if code not in wallets_dict:
         return "Кошелек не существует"
     wallet = Wallet(code, wallets_dict[code].get("balance", 0.0))
     if wallet.balance < amt:
         return f"Недостаточно {code}: доступно {wallet.balance:.4f}, требуется {amt:.4f}"
 
+    if "USD" not in wallets_dict:
+        wallets_dict["USD"] = {"balance": 0.0}
+
+    usd_wallet = Wallet("USD", wallets_dict["USD"].get("balance", 0.0))
+
     old_balance = wallet.balance
     wallet.withdraw(amt)
     wallets_dict[code] = {"balance": wallet.balance}
+
+    old_usd_balance = usd_wallet.balance
+    usd_wallet.deposit(revenue_usd)
+    wallets_dict["USD"] = {"balance": usd_wallet.balance}
 
     save_portfolios(portfolios)
 
@@ -202,7 +239,8 @@ def sell(currency: str, amount: float) -> str:
     f"Продажа выполнена: {amt:.4f} {code} по курсу {rate:.2f} USD/{code}\n"
     f"Изменения в портфеле:\n"
     f"- {code}: было {old_balance:.4f} → стало {wallet.balance:.4f}\n"
-    f"Оценочная стоимость выручки: {revenue_usd:,.2f} USD"
+    f"- USD: было {old_usd_balance:.2f} → стало {usd_wallet.balance:.2f}\n"
+    f"Выручка от продажи: {revenue_usd:,.2f} USD"
 )
 
 def get_rate(cur_from: str, cur_to: str) -> str:
@@ -266,6 +304,7 @@ def logout_user() -> str:
     if current_user:
         username = current_user.username
         current_user = None
+        clear_session()
         return f"Вы вышли из системы. До свидания, {username}!"
     else:
         return "Вы не вошли в систему"
