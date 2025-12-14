@@ -4,9 +4,8 @@
 
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Any, Optional
-from .exceptions import CurrencyNotFoundError, ApiRequestError
 from .currencies import get_currency, get_supported_currencies
 from ..infra.database import DatabaseManager
 from ..infra.settings import SettingsLoader
@@ -17,7 +16,7 @@ def setup_data_directories() -> None:
     settings = SettingsLoader()
     data_dir = settings.get("data_dir", "data")
     logs_dir = settings.get("logs_dir", "logs")
-    
+
     os.makedirs(data_dir, exist_ok=True)
     os.makedirs(logs_dir, exist_ok=True)
 
@@ -25,34 +24,28 @@ def setup_data_directories() -> None:
 def validate_currency_code(code: str) -> str:
     """
     Валидация кода валюты
-    
     Args:
         code: Код валюты для проверки
-    
     Returns:
         Валидированный код в верхнем регистре
-    
     Raises:
         CurrencyNotFoundError: если валюта не поддерживается
     """
     code = code.strip().upper()
-    
+
     # Проверяем через get_currency, который бросит CurrencyNotFoundError
     get_currency(code)
-    
+
     return code
 
 
 def validate_amount(amount: float) -> float:
     """
     Валидация суммы
-    
     Args:
         amount: Сумма для проверки
-    
     Returns:
         Валидированную сумму
-    
     Raises:
         ValueError: если сумма некорректна
     """
@@ -153,17 +146,16 @@ def next_user_id(users: List[Dict]) -> int:
 def should_refresh_rates() -> bool:
     """
     Проверить, нужно ли обновлять курсы валют
-    
     Returns:
         True если курсы устарели, False если актуальны
     """
     settings = SettingsLoader()
     ttl_seconds = settings.get("rates_ttl_seconds", 3600)
-    
+
     rates = load_rates()
     if not rates:
         return True
-    
+
     # Проверяем время последнего обновления
     for rate_data in rates.values():
         if "updated_at" in rate_data:
@@ -173,17 +165,15 @@ def should_refresh_rates() -> bool:
                 return age.total_seconds() > ttl_seconds
             except (ValueError, KeyError):
                 return True
-    
+
     return True
 
 
 def get_currency_display_info(code: str) -> str:
     """
     Получить информацию о валюте для отображения
-    
     Args:
         code: Код валюты
-    
     Returns:
         Строковое представление валюты
     """

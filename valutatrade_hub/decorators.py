@@ -1,14 +1,15 @@
+"""
+Декораторы для логирования операций
+"""
+
 import functools
 import logging
-from datetime import datetime
 from typing import Callable, Any
 
 
 logger = logging.getLogger("valutatrade.actions")
 
 def log_action(func: Callable) -> Callable:
-    """Декоратор для логирования действий пользователя"""
-
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> Any:
         action = func.__name__.upper()
@@ -27,10 +28,12 @@ def log_action(func: Callable) -> Callable:
             amount = args[1] if len(args) > 1 else kwargs.get('amount', 0)
             log_message += f" currency='{currency}' amount={amount}"
         elif action == 'REGISTER' and len(args) >= 2:
-            username_arg = args[0] if len(args) > 0 else kwargs.get('username', 'unknown')
+            username_arg = args[0] if len(args) > 0 else kwargs.get('username',
+            'unknown')
             log_message += f" new_user='{username_arg}'"
         elif action == 'LOGIN' and len(args) >= 2:
-            username_arg = args[0] if len(args) > 0 else kwargs.get('username', 'unknown')
+            username_arg = args[0] if len(args) > 0 else kwargs.get('username',
+            'unknown')
             log_message += f" attempt_user='{username_arg}'"
 
         try:
@@ -38,7 +41,7 @@ def log_action(func: Callable) -> Callable:
             logger.info(f"{log_message} result=OK")
             return result
         except Exception as e:
-            error_msg = str(e).replace("'", "")  # Убираем кавычки для удобства
+            error_msg = str(e).replace("'", "")
             logger.error(f"{log_message} result=ERROR error='{error_msg}'")
             raise
 
