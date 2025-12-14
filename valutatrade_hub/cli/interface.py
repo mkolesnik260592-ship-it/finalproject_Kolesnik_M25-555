@@ -1,3 +1,7 @@
+"""
+CLI интерфейс приложения
+"""
+
 import argparse
 import sys
 from valutatrade_hub.core.usecases import (
@@ -8,50 +12,62 @@ from valutatrade_hub.core.usecases import (
     sell,
     get_rate,
     logout_user,
-    get_current_user_info
-    )
+    get_current_user_info,
+    list_supported_currencies
+)
+from valutatrade_hub.core.exceptions import (
+    InsufficientFundsError,
+    CurrencyNotFoundError,
+    ApiRequestError,
+    UserNotFoundError
+)
+
 
 def main():
     parser = argparse.ArgumentParser(
         description="Валютный кошелек - управление виртуальным портфелем",
-        prog="valutatrade"
+        prog="valutatrade",
+        epilog="Используйте 'valutatrade <команда> --help' для справки по команде"
     )
-
-    subparsers= parser.add_subparsers(
+    
+    subparsers = parser.add_subparsers(
         dest="command",
-        help="Доступные комманды"
+        help="Доступные команды"
     )
-
+    
+    # Команда: register
     register_parser = subparsers.add_parser(
-    "register",
-    help="Регистрация нового пользователя"
+        "register",
+        help="Регистрация нового пользователя"
     )
     register_parser.add_argument(
-    "--username",
-    required=True,
-    help="Имя пользователя"
+        "--username",
+        required=True,
+        help="Имя пользователя"
     )
     register_parser.add_argument(
-    "--password",
-    required=True,
-    help="Пароль (минимум 4 символа)"
+        "--password",
+        required=True,
+        help="Пароль (минимум 4 символа)"
     )
-
+    
+    # Команда: login
     login_parser = subparsers.add_parser(
-    "login",
-    help="Вход в сушествующий профиль"
+        "login",
+        help="Вход в существующий профиль"
     )
     login_parser.add_argument(
-    "--username",
-    required=True,
-    help="Имя пользователя"
+        "--username",
+        required=True,
+        help="Имя пользователя"
     )
     login_parser.add_argument(
-    "--password",
-    required=True,
-    help="Пароль (минимум 4 символа)"
+        "--password",
+        required=True,
+        help="Пароль"
     )
-
+    
+    # Команда: show-portfolio
     portfolio_parser = subparsers.add_parser(
         "show-portfolio",
         help="Информация о кошельке"
@@ -59,9 +75,10 @@ def main():
     portfolio_parser.add_argument(
         "--base",
         default="USD",
-        help="Базовая валюта для конвертации (по уммолчанию USD)"
+        help="Базовая валюта для конвертации (по умолчанию USD)"
     )
-
+    
+    # Команда: buy
     buy_parser = subparsers.add_parser(
         "buy",
         help="Покупка валюты"
@@ -77,7 +94,8 @@ def main():
         required=True,
         help="Количество для покупки"
     )
-
+    
+    # Команда: sell
     sell_parser = subparsers.add_parser(
         "sell",
         help="Продажа валюты"
@@ -93,10 +111,11 @@ def main():
         required=True,
         help="Количество для продажи"
     )
-
+    
+    # Команда: get-rate
     rate_parser = subparsers.add_parser(
         "get-rate",
-        help="Получить курс вылюты"
+        help="Получить курс валюты"
     )
     rate_parser.add_argument(
         "--from",
@@ -110,26 +129,49 @@ def main():
         required=True,
         help="Целевая валюта"
     )
-
+    
+    # Команда: logout
     subparsers.add_parser(
         "logout",
         help="Выход из системы"
     )
-
+    
+    # Команда: whoami
     subparsers.add_parser(
         "whoami",
         help="Показать текущего пользователя"
     )
-
+    
+    # Команда: list-currencies
+    subparsers.add_parser(
+        "list-currencies",
+        help="Показать список поддерживаемых валют"
+    )
+    
     args = parser.parse_args()
-
+    
     if not args.command:
         parser.print_help()
         sys.exit(1)
-
+    
     try:
         result = handle_command(args)
         print(result)
+    except InsufficientFundsError as e:
+        print(f"Ошибка: {e}")
+        print("Проверьте баланс и попробуйте снова.")
+        sys.exit(1)
+    except CurrencyNotFoundError as e:
+        print(f"Ошибка: {e}")
+        print("Используйте команду 'list-currencies' чтобы увидеть доступные валюты.")
+        sys.exit(1)
+    except ApiRequestError as e:
+        print(f"Ошибка API: {e}")
+        print("Пожалуйста, повторите попытку позже или проверьте соединение.")
+        sys.exit(1)
+    except UserNotFoundError as e:
+        print(f"Ошибка: {e}")
+        sys.exit(1)
     except ValueError as e:
         print(f"Ошибка: {e}")
         sys.exit(1)
@@ -156,5 +198,11 @@ def handle_command(args):
         return logout_user()
     elif args.command == "whoami":
         return get_current_user_info()
+    elif args.command == "list-currencies":
+        return list_supported_currencies()
     else:
         return "Неизвестная команда"
+
+
+if __name__ == "__main__":
+    main()
