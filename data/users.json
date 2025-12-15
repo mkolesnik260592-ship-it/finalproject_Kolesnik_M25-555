@@ -2,8 +2,8 @@
   {
     "user_id": 1,
     "username": "demo",
-    "hashed_password": "9f7a50b289575134b3586c6206fb8fc69b027a411be0ebb7ac8ed9935c282b4c",
-    "salt": "elABfYMUIEY",
-    "registration_date": "2025-12-15T15:53:44.077476"
+    "hashed_password": "3c0afec8af714181de3a4d82f63853c50094c0ec3975b6e3ea1029ab0aa50f5b",
+    "salt": "2ArBT9n-sj4",
+    "registration_date": "2025-12-15T16:44:24.808134"
   }
 ]

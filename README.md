@@ -328,6 +328,10 @@ requests - HTTP запросы к внешним API
 
 python-dotenv - загрузка переменных окружения из .env файлов
 
+## Демонстрация
+
+[![asciicast]()https://asciinema.org/a/mRcYWYiiMgm7BxWiDeIpLXUo7](https://asciinema.org/a/mRcYWYiiMgm7BxWiDeIpLXUo7)
+
 Лицензия
 MIT
 

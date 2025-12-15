@@ -1,34 +1,34 @@
 {
-  "BTC_USD_2025-12-15T12:53:47.660471Z": {
-    "id": "BTC_USD_2025-12-15T12:53:47.660471Z",
+  "BTC_USD_2025-12-15T13:44:54.813987Z": {
+    "id": "BTC_USD_2025-12-15T13:44:54.813987Z",
     "from_currency": "BTC",
     "to_currency": "USD",
-    "rate": 89673.0,
-    "timestamp": "2025-12-15T12:53:47.660471Z",
+    "rate": 89458.0,
+    "timestamp": "2025-12-15T13:44:54.813987Z",
     "source": "CoinGecko",
     "meta": {
       "request_ms": 0,
       "status_code": 200
     }
   },
-  "ETH_USD_2025-12-15T12:53:47.660471Z": {
-    "id": "ETH_USD_2025-12-15T12:53:47.660471Z",
+  "ETH_USD_2025-12-15T13:44:54.813987Z": {
+    "id": "ETH_USD_2025-12-15T13:44:54.813987Z",
     "from_currency": "ETH",
     "to_currency": "USD",
-    "rate": 3153.15,
-    "timestamp": "2025-12-15T12:53:47.660471Z",
+    "rate": 3137.26,
+    "timestamp": "2025-12-15T13:44:54.813987Z",
     "source": "CoinGecko",
     "meta": {
       "request_ms": 0,
       "status_code": 200
     }
   },
-  "SOL_USD_2025-12-15T12:53:47.660471Z": {
-    "id": "SOL_USD_2025-12-15T12:53:47.660471Z",
+  "SOL_USD_2025-12-15T13:44:54.813987Z": {
+    "id": "SOL_USD_2025-12-15T13:44:54.813987Z",
     "from_currency": "SOL",
     "to_currency": "USD",
-    "rate": 132.85,
-    "timestamp": "2025-12-15T12:53:47.660471Z",
+    "rate": 132.82,
+    "timestamp": "2025-12-15T13:44:54.813987Z",
     "source": "CoinGecko",
     "meta": {
       "request_ms": 0,
