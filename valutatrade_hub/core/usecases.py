@@ -115,7 +115,8 @@ def buy(currency: str, amount: float) -> str:
 
     currency_obj = get_currency(code)
 
-    rates = load_rates()
+    rates_data = load_rates()
+    rates = rates_data.get("pairs", {})
     key = f"{code}_USD"
 
     if code == "USD":
@@ -202,7 +203,8 @@ def sell(currency: str, amount: float) -> str:
 
     currency_obj = get_currency(code)
 
-    rates = load_rates()
+    rates_data = load_rates()
+    rates = rates_data.get("pairs", {})
     key = f"{code}_USD"
 
     if code == "USD":
@@ -288,7 +290,8 @@ def get_rate(cur_from: str, cur_to: str) -> str:
     from_currency = get_currency(from_curr)
     to_currency = get_currency(to_curr)
 
-    rates = load_rates()
+    rates_data = load_rates()
+    rates = rates_data.get("pairs", {})
     key = f"{from_curr}_{to_curr}"
 
     if should_refresh_rates():

@@ -4,7 +4,7 @@
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from .currencies import get_currency, get_supported_currencies
 from ..infra.database import DatabaseManager
@@ -144,30 +144,51 @@ def next_user_id(users: List[Dict]) -> int:
 
 
 def should_refresh_rates() -> bool:
+
     """
     Проверить, нужно ли обновлять курсы валют
     Returns:
         True если курсы устарели, False если актуальны
+    Проверяет:
+    1. Поле last_refresh в rates.json (глобальное время обновления)
+    2. Поле updated_at в каждой паре валют
+    3. Сравнивает с TTL из настроек (по умолчанию 3600 секунд)
     """
+
     settings = SettingsLoader()
     ttl_seconds = settings.get("rates_ttl_seconds", 3600)
 
-    rates = load_rates()
+    rates_data = load_rates()
+    if not rates_data or not isinstance(rates_data, dict):
+        return True
+
+    if "last_refresh" in rates_data and rates_data["last_refresh"]:
+        try:
+            updated_str = rates_data["last_refresh"].replace('Z', '+00:00')
+            updated = datetime.fromisoformat(updated_str)
+            now = datetime.now(timezone.utc)
+            age = (now - updated).total_seconds()
+            return age > ttl_seconds
+        except (ValueError, KeyError, AttributeError):
+            return True
+
+    rates = rates_data.get("pairs", {})
     if not rates:
         return True
 
-    # Проверяем время последнего обновления
     for rate_data in rates.values():
-        if "updated_at" in rate_data:
+        if isinstance(rate_data, dict) and "updated_at" in rate_data:
             try:
-                updated_at = datetime.fromisoformat(rate_data["updated_at"])
-                age = datetime.now() - updated_at
-                return age.total_seconds() > ttl_seconds
-            except (ValueError, KeyError):
+                updated_str = rate_data["updated_at"].replace('Z', '+00:00')
+                updated = datetime.fromisoformat(updated_str)
+                now = datetime.now(timezone.utc)
+                age = (now - updated).total_seconds()
+                if age < ttl_seconds:
+                    return False
+            except (ValueError, KeyError, AttributeError):
                 return True
 
     return True
-
 
 def get_currency_display_info(code: str) -> str:
     """
